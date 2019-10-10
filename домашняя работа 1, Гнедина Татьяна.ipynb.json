@@ -1,0 +1,504 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Гнедина Татьяна, БКЛ183\n",
+    "Домашняя работа 1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 168,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The pycodestyle_magic extension is already loaded. To reload it, use:\n",
+      "  %reload_ext pycodestyle_magic\n"
+     ]
+    }
+   ],
+   "source": [
+    "%load_ext pycodestyle_magic\n",
+    "%pycodestyle_on"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 1. Сколько твитов в наборе?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 132,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Количество твитов:\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "2556"
+      ]
+     },
+     "execution_count": 132,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import json\n",
+    "import collections\n",
+    "import re\n",
+    "twitter = []\n",
+    "for line in open('hw_3_twitter.json'): #считываем текст\n",
+    "    twitter.append(json.loads(line))\n",
+    "print('Количество твитов:')\n",
+    "len(twitter)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2. Какой процент твитов составляют удаленные записи? (помеченные как deleted)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Посчитаем удаленные записи по ключу \"delete\", далее, используя первую задачу, найдем процент."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 133,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Процент твитов, которые составляют удаленные записи\n",
+      "14.162754303599373 %\n"
+     ]
+    }
+   ],
+   "source": [
+    "c=0\n",
+    "for i in twitter:\n",
+    "    for key in i:\n",
+    "        if key=='delete':\n",
+    "            c+=1   #Находим число удаленных твитов\n",
+    "c=c/len(twitter)\n",
+    "c=c*100\n",
+    "print('Процент твитов, которые составляют удаленные записи')\n",
+    "print(c,'%')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3. Какие самые популярные языки твитов?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "По ключу \"lang\" заполним новый словарь, включающий в себя перечень языков и их употребляемость."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 161,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Наиболее употребляемые языки и число их употреблений:\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'en': 719,\n",
+       " 'ja': 438,\n",
+       " 'es': 173,\n",
+       " 'ko': 149,\n",
+       " 'th': 123,\n",
+       " 'ar': 119,\n",
+       " 'und': 117,\n",
+       " 'in': 71,\n",
+       " 'pt': 69,\n",
+       " 'fr': 35,\n",
+       " 'tr': 30,\n",
+       " 'tl': 29,\n",
+       " 'hi': 23,\n",
+       " 'ru': 15,\n",
+       " 'fa': 8,\n",
+       " 'zh': 8,\n",
+       " 'ca': 7,\n",
+       " 'ur': 6,\n",
+       " 'nl': 6,\n",
+       " 'de': 6}"
+      ]
+     },
+     "execution_count": 161,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "abc={}\n",
+    "c = collections.Counter()\n",
+    "for i in twitter:\n",
+    "    for key in i:\n",
+    "        if key=='lang':\n",
+    "            if i['lang'] in abc:\n",
+    "                abc[i['lang']]+=1 # увеличиваем значение с числом твитов на данном языке\n",
+    "            else:\n",
+    "                abc[i['lang']]=1  #создаем новый ключ, если он не встречался раннее\n",
+    "print('Наиболее употребляемые языки и число их употреблений:')\n",
+    "dict(Counter(abc).most_common(20))  #находим 20 самых популярных\n",
+    "            \n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 4. Есть ли твиты от одного и того же пользователя? Если да, то сколько таких пользователей?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Определять уникальность пользователя будем по id, указанному в характеристике user."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 147,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "25 пользователей создали более одного твита\n"
+     ]
+    }
+   ],
+   "source": [
+    "import collections\n",
+    "from collections import Counter\n",
+    "das={}\n",
+    "numb=0\n",
+    "for i in twitter:\n",
+    "    for key in i:\n",
+    "        if key=='user':\n",
+    "            for j in (i[key]):\n",
+    "                if j=='id':\n",
+    "                    if i[key][j] in das:\n",
+    "                        das[i[key][j]]+=1 # увеличиваем значение с числом твитов данного пользователя\n",
+    "                    else:\n",
+    "                        das[i[key][j]]=1 #создаем новый ключ, если он не встречался раннее\n",
+    "for key in sorted(das, key=das.get):\n",
+    "    if das[key]!=1:\n",
+    "        numb+=1\n",
+    "print(numb, 'пользователей создали более одного твита')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 5. Топ-20 хэштегов (для них есть специальное поле)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Для начала разделим все твиты на удаленные и обычные."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 137,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "del_tweets = []\n",
+    "good_tweets = []\n",
+    "for i in range(len(twitter)):\n",
+    "    if 'delete' in twitter[i]:\n",
+    "        del_tweets.append(twitter[i])\n",
+    "    else:\n",
+    "        good_tweets.append(twitter[i])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Хэштэги лежат в 'entities' в значениях ключа 'hashtags'."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 124,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\t Название хештега: \t \n",
+      "\n",
+      "1. \t BTS\n",
+      "2. \t 방탄소년단\n",
+      "3. \t AMAs\n",
+      "4. \t 人気投票ガチャ\n",
+      "5. \t 태형\n",
+      "6. \t 뷔\n",
+      "7. \t BTSinChicago\n",
+      "8. \t BTSLoveYourselfTour\n",
+      "9. \t 오늘의방탄\n",
+      "10. \t PledgeForSwachhBharat\n",
+      "11. \t MPN\n",
+      "12. \t PCAs\n",
+      "13. \t V\n",
+      "14. \t 시카고1회차공연\n",
+      "15. \t เป๊กผลิตโชค\n",
+      "16. \t JIMIN\n",
+      "17. \t running\n",
+      "18. \t NCT\n",
+      "19. \t 지민\n",
+      "20. \t WajahmuPlastik\n"
+     ]
+    }
+   ],
+   "source": [
+    "ht = []\n",
+    "for i in range(len(good_tweets)):\n",
+    "    hashtag = good_tweets[i]['entities']['hashtags']\n",
+    "    if len(hashtag) != 0:\n",
+    "        for j in range(len(hashtag)):\n",
+    "            ht.append(hashtag[j]['text'])\n",
+    "h = Counter(ht)\n",
+    "top20 = h.most_common(20)\n",
+    "print('\\t','Название хештега:','\\t','\\n')\n",
+    "count = 1\n",
+    "for tup in top20: \n",
+    "    print(str(count) + '.', '\\t', tup[0])\n",
+    "    count += 1"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 6. Предобработать тексты оригинальных твитов (не ретвитов) на английском языке (убрать пунктуацию, привести к нижнему регистру) и составить частотный словарь"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Находим оригинальные тексты на английском языке."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 138,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tweets_orig = []\n",
+    "for i in range(len(good_tweets)):\n",
+    "    if (good_tweets[i]['lang'] == 'en') and ('retweeted_status' not in good_tweets[i].keys()) and ('quoted_status' not in good_tweets[i].keys()):\n",
+    "        tweets_orig.append(good_tweets[i]['text'])\n",
+    "        "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Чистим от лишних символов, пунктуации, заглавных букв."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 141,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Топ-15 частотных слов в оригинальных твитах на английском языке\n",
+      "\t Слово: \t Частотность его употребления: \n",
+      "\n",
+      "1) \t the \t 107\n",
+      "2) \t to \t 79\n",
+      "3) \t a \t 68\n",
+      "4) \t i \t 61\n",
+      "5) \t and \t 58\n",
+      "6) \t you \t 45\n",
+      "7) \t is \t 41\n",
+      "8) \t of \t 41\n",
+      "9) \t for \t 40\n",
+      "10) \t it \t 38\n",
+      "11) \t in \t 32\n",
+      "12) \t that \t 30\n",
+      "13) \t my \t 26\n",
+      "14) \t me \t 26\n",
+      "15) \t on \t 25\n"
+     ]
+    }
+   ],
+   "source": [
+    "words = []  \n",
+    "for t in tweets_orig:\n",
+    "    t = t.lower() #заменяем заглавные буквы\n",
+    "    t = re.sub(r'[^a-zA-Z\\'\\s-]', r'', t) # чистим от смайликов и эмоджи\n",
+    "    t = re.sub(r'http.+?($|\\s)', r'', t)  # чистим от ссылок\n",
+    "    t = re.sub(r'@.*?($|\\s)', r'', t)  # чистим от хэндлов\n",
+    "    t = re.sub(r'#.*?($|\\s)', r'', t)  # чистим от хэштегов\n",
+    "    words.extend(t.split()) #почищенные твиты       \n",
+    "top15 = Counter(words).most_common(15)\n",
+    "print('Топ-15 частотных слов в оригинальных твитах на английском языке')\n",
+    "print('\\t','Слово:','\\t','Частотность его употребления:','\\n')\n",
+    "count = 1\n",
+    "for rat in top15: #вывод частотного словаря\n",
+    "    print(str(count) + ')', '\\t', rat[0], '\\t', rat[1])\n",
+    "    count += 1"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 7. Найти количество подписчиков (фолловеров) у авторов твитов и вывести топ-10"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 152,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ТОП-10 авторов и количество их подписчиков:\n",
+      "Filosofía♕\t\t\t2521403\n",
+      "FITNESS Magazine\t\t\t1491309\n",
+      "malaysiakini.com\t\t\t1206759\n",
+      "NYT Science\t\t\t1137374\n",
+      "Gramática\t\t\t625463\n",
+      "TGRT Haber\t\t\t392472\n",
+      "The Sun Football ⚽\t\t\t383698\n",
+      "Melbourne, Australia\t\t\t374222\n",
+      "Roznama Express\t\t\t318189\n",
+      "💞 ცųཞɠɛཞცơơɠıɛ 💞\t\t\t311319\n"
+     ]
+    }
+   ],
+   "source": [
+    "popular_auth={} #создаем словарь для подписчиков\n",
+    "for i in range(len(good_tweets)):\n",
+    "        popular_auth[good_tweets[i]['user']['name']] = good_tweets[i]['user']['followers_count']\n",
+    "auth_count = Counter(popular_auth).most_common(10)\n",
+    "print('ТОП-10 авторов и количество их подписчиков:')\n",
+    "for author in auth_count:  #выводим результат\n",
+    "    auth = author[0]\n",
+    "    follower = author[1]\n",
+    "    print(auth + '\\t''\\t''\\t' + str(follower))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 8. Топ-10 источников твита"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 158,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Топ-10 самых популярных приложений-источников для твитов\n",
+      "1. Twitter for iPhone\n",
+      "2. Twitter for Android\n",
+      "3. Twitter Web Client\n",
+      "4. twittbot.net\n",
+      "5. Twitter Lite\n",
+      "6. Twitter for iPad\n",
+      "7. TweetDeck\n",
+      "8. Facebook\n",
+      "9. IFTTT\n",
+      "10. تطبيق قرآني\n"
+     ]
+    }
+   ],
+   "source": [
+    "apps = [] #для приложений-источников\n",
+    "for i in range(len(good_tweets)):\n",
+    "    source = good_tweets[i]['source']\n",
+    "    source = re.search(r'(?:>(.+?)</a>)', source)\n",
+    "    apps.append(source.group(1))\n",
+    "apps = collections.Counter(apps).most_common()\n",
+    "print('Топ-10 самых популярных приложений-источников для твитов')\n",
+    "for i in range(10):\n",
+    "    print(str(i + 1) + '. ' + apps[i][0])"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
